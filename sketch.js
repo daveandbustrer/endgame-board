@@ -6,16 +6,23 @@ class Piece {
 }
 //pawn like piece in the board game
 class Beliver extends Piece {
-  constructor(sizeRatio) {
+  constructor(sizeRatio, team = null) {
     super(sizeRatio);
+    this.team = team;
+    this.moveup = team == "red" ? -1 : 1;
   }
   //placeholder drawing of the beliver
   draw(tile) {
+    fill(this.team);
     circle(
       tile.x + tile.size / 2,
       tile.y + tile.size / 2,
       tile.size * this.sizeRatio,
     );
+  }
+  move(tile) {
+    if (this.moveup > 0) {
+    }
   }
 }
 // Create the board with it's tiles
@@ -50,7 +57,9 @@ function createPieces(board, map) {
     const cell = map[tile.row]?.[tile.col];
     const PieceType = cell?.[0];
 
-    tile.piece = PieceType ? new PieceType() : null;
+    tile.piece = PieceType
+      ? new PieceType(0.8, tile.row < map.length / 2 ? "red" : "blue")
+      : null;
   }
 }
 
@@ -80,7 +89,7 @@ function drawPieces(board) {
 // to get the size of the board
 const size = () => min(width, height) * 0.9;
 
-let pieceMap = [
+const pieceMap = [
   [
     [],
     [],
@@ -256,18 +265,8 @@ function setup() {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-
-  // Update tile geometry
-  const boardSize = size();
-  const tilesize = boardSize / range;
-  const offsetX = (width - boardSize) / 2;
-  const offsetY = (height - boardSize) / 2;
-
-  for (const tile of tiles) {
-    tile.x = tile.col * tilesize + offsetX;
-    tile.y = tile.row * tilesize + offsetY;
-    tile.size = tilesize;
-  }
+  tiles = createBoard(pieceMap.length);
+  createPieces(tiles, pieceMap);
 }
 
 function draw() {
