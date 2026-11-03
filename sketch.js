@@ -1,10 +1,3 @@
-// to get the size of the board
-const size = () => min(width, height) * 0.9;
-
-let tiles = [];
-//nuber of rows and columns
-const range = 2;
-
 //basic piece
 class Piece {
   constructor(sizeRatio = 0.8) {
@@ -52,9 +45,12 @@ function createBoard(range) {
 }
 
 // Add pieces separately.
-function createPieces(board) {
+function createPieces(board, map) {
   for (const tile of board) {
-    tile.piece = new Beliver();
+    const cell = map[tile.row]?.[tile.col];
+    const PieceType = cell?.[0];
+
+    tile.piece = PieceType ? new PieceType() : null;
   }
 }
 
@@ -72,7 +68,6 @@ function drawBoard(board) {
 
 function drawPieces(board) {
   push();
-  noStroke();
   fill("gray");
 
   for (const tile of board) {
@@ -82,12 +77,181 @@ function drawPieces(board) {
   }
   pop();
 }
+// to get the size of the board
+const size = () => min(width, height) * 0.9;
+
+let pieceMap = [
+  [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+  ],
+  [
+    [],
+    [],
+    [Beliver],
+    [],
+    [Beliver],
+    [],
+    [Beliver],
+    [],
+    [],
+    [],
+    [Beliver],
+    [],
+    [Beliver],
+    [],
+    [Beliver],
+    [],
+    [],
+  ],
+  [
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+  ],
+  [
+    [],
+    [],
+    [],
+    [],
+    [Beliver],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [Beliver],
+    [],
+    [],
+    [],
+    [],
+  ],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [
+    [],
+    [],
+    [],
+    [],
+    [Beliver],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [Beliver],
+    [],
+    [],
+    [],
+    [],
+  ],
+  [
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+  ],
+  [
+    [],
+    [],
+    [Beliver],
+    [],
+    [Beliver],
+    [],
+    [Beliver],
+    [],
+    [],
+    [],
+    [Beliver],
+    [],
+    [Beliver],
+    [],
+    [Beliver],
+    [],
+    [],
+  ],
+  [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+  ],
+];
+//nuber of rows and columns
+const range = 4;
+let tiles = [];
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
 
-  tiles = createBoard(range);
-  createPieces(tiles);
+  tiles = createBoard(pieceMap.length);
+  createPieces(tiles, pieceMap);
 }
 
 function windowResized() {
