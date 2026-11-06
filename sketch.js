@@ -1,15 +1,17 @@
 //basic piece
 class Piece {
-  constructor(sizeRatio = 0.8) {
+  constructor(sizeRatio = 0.8, canjump) {
     this.sizeRatio = sizeRatio;
+    this.canjump = canjump;
   }
 }
 //pawn like piece in the board game
 class Beliver extends Piece {
   constructor(sizeRatio, team = null) {
-    super(sizeRatio);
+    super(sizeRatio, false);
     this.team = team;
-    this.moveup = team == "red" ? -1 : 1;
+    this.movedir = team == "red" ? 1 : -1;
+    this.hasmoved = false;
   }
   //placeholder drawing of the beliver
   draw(tile) {
@@ -20,14 +22,33 @@ class Beliver extends Piece {
       tile.size * this.sizeRatio,
     );
   }
+  drawmove(tile) {
+    let range = !this.hasmoved ? 2 : 1;
+    push();
+    fill("grey");
+    for (let i = 1; i <= range; i++) {
+      let row = tile.row + i * this.movedir;
+      const ntile = tiles[row][tile.col];
+      if (ntile.piece)
+        if (this.canjump) {
+          continue;
+        } else break;
+      circle(
+        ntile.x + ntile.size / 2,
+        ntile.y + ntile.size / 2,
+        (ntile.size * this.sizeRatio) / 2,
+      );
+    }
+    pop();
+  }
   move(tile) {
-    if (this.moveup > 0) {
+    if (this.movedir > 0) {
     }
   }
 }
 // Create the board with it's tiles
 function createBoard(range) {
-  //basic simplification stuff
+  //basic abstraction stuff
   const boardSize = size();
   const tilesize = boardSize / range;
   const offsetX = (width - boardSize) / 2;
@@ -274,7 +295,7 @@ const pieceMap = [
 ];
 let tiles = [];
 
-let piececlicked = null;
+let piececlicked;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -288,6 +309,7 @@ function windowResized() {
   tiles = createBoard(pieceMap.length);
   createPieces(tiles, pieceMap);
 }
+
 function mouseClicked() {
   const boardSize = size();
   const tilesize = boardSize / pieceMap.length;
@@ -298,13 +320,19 @@ function mouseClicked() {
   const locationY = floor((mouseX - offsetX) / tilesize);
   const locationX = floor((mouseY - offsetY) / tilesize);
 
-  const piece = tiles[locationX][locationY].piece;
-  if (piece) {
-    piececlicked = tiles[locationX][locationY];
+  const tile = tiles[locationX][locationY];
+  const piece = tile.piece;
+  if (piececlicked === tile) {
+    piececlicked = null;
+  } else if (piece) {
+    piececlicked = tile;
   }
 }
 function draw() {
   background("black");
   drawBoard(tiles);
   drawPieces(tiles);
+  if (piececlicked) {
+    piececlicked.piece.drawmove(piececlicked);
+  }
 }
