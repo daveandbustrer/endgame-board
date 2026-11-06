@@ -4,13 +4,34 @@ class Piece {
     this.sizeRatio = sizeRatio;
     this.canjump = canjump;
   }
+  getmoves() {
+    return null;
+  }
+  drawmove(tile) {
+    push();
+    fill("grey");
+    for (const move of this.getmoves(tile)) {
+      circle(
+        move.x + move.size / 2,
+        move.y + move.size / 2,
+        (move.size * this.sizeRatio) / 2,
+      );
+    }
+    pop();
+  }
+  move(tile, to) {
+    if (this.getmoves(tile).includes(to)) {
+      to.piece = this;
+      tile.piece = null;
+    }
+  }
 }
 //pawn like piece in the board game
 class Beliver extends Piece {
   constructor(sizeRatio, team = null) {
     super(sizeRatio, false);
     this.team = team;
-    this.movedir = team == "red" ? 1 : -1;
+    this.movedir = team == settings.teamOne ? 1 : -1;
     this.hasmoved = false;
   }
   //placeholder drawing of the beliver
@@ -22,10 +43,9 @@ class Beliver extends Piece {
       tile.size * this.sizeRatio,
     );
   }
-  drawmove(tile) {
+  getmoves(tile) {
     let range = !this.hasmoved ? 2 : 1;
-    push();
-    fill("grey");
+    let moves = [];
     for (let i = 1; i <= range; i++) {
       let row = tile.row + i * this.movedir;
       const ntile = tiles[row][tile.col];
@@ -33,17 +53,9 @@ class Beliver extends Piece {
         if (this.canjump) {
           continue;
         } else break;
-      circle(
-        ntile.x + ntile.size / 2,
-        ntile.y + ntile.size / 2,
-        (ntile.size * this.sizeRatio) / 2,
-      );
+      moves.push(ntile);
     }
-    pop();
-  }
-  move(tile) {
-    if (this.movedir > 0) {
-    }
+    return moves;
   }
 }
 // Create the board with it's tiles
@@ -65,7 +77,7 @@ function createBoard(range) {
         x: col * tilesize + offsetX,
         y: row * tilesize + offsetY,
         size: tilesize,
-        color: (row + col) % 2 === 0 ? "white" : "red",
+        color: (row + col) % 2 === 0 ? settings.colorTwo : settings.colorOne,
         piece: null,
       });
     }
@@ -82,7 +94,10 @@ function createPieces(board, map) {
       const PieceType = cell?.[0];
 
       tile.piece = PieceType
-        ? new PieceType(0.8, tile.row < map.length / 2 ? "red" : "blue")
+        ? new PieceType(
+            0.8,
+            tile.row < map.length / 2 ? settings.teamOne : settings.teamTwo,
+          )
         : null;
     }
   }
@@ -293,6 +308,12 @@ const pieceMap = [
     [],
   ],
 ];
+const settings = {
+  teamOne: "red",
+  teamTwo: "blue",
+  colorOne: "black",
+  colorTwo: "gold",
+};
 let tiles = [];
 
 let piececlicked;
@@ -302,6 +323,7 @@ function setup() {
 
   tiles = createBoard(pieceMap.length);
   createPieces(tiles, pieceMap);
+  noStroke();
 }
 
 function windowResized() {
@@ -321,10 +343,17 @@ function mouseClicked() {
   const locationX = floor((mouseY - offsetY) / tilesize);
 
   const tile = tiles[locationX][locationY];
-  const piece = tile.piece;
-  if (piececlicked === tile) {
-    piececlicked = null;
-  } else if (piece) {
+
+  if (piececlicked) {
+    if (piececlicked === tile) {
+      piececlicked = null;
+    } else {
+      piececlicked.piece.move(piececlicked, tile);
+      if (tile.piece) {
+        piececlicked = tile;
+      } else piececlicked = null;
+    }
+  } else if (tile.piece) {
     piececlicked = tile;
   }
 }
@@ -333,6 +362,6 @@ function draw() {
   drawBoard(tiles);
   drawPieces(tiles);
   if (piececlicked) {
-    piececlicked.piece.drawmove(piececlicked);
+    if (piececlicked.piece) piececlicked.piece.drawmove(piececlicked);
   }
 }
