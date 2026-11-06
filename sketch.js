@@ -50,7 +50,6 @@ function createBoard(range) {
     }
     board.push(rowarray);
   }
-  console.log(board);
   return board;
 }
 
@@ -70,14 +69,26 @@ function createPieces(board, map) {
 
 function drawBoard(board) {
   push();
-  noStroke();
-  rectMode(CORNER);
 
+  rectMode(CORNER);
+  let piecetile;
   for (const row of board) {
     for (const tile of row) {
       fill(tile.color);
+      if (piececlicked === tile) {
+        piecetile = tile;
+        continue;
+      } else noStroke();
       square(tile.x, tile.y, tile.size);
     }
+  }
+  if (piecetile) {
+    push();
+    fill(piecetile.color);
+    strokeWeight(3);
+    stroke("green");
+    square(piecetile.x, piecetile.y, piecetile.size);
+    pop();
   }
   pop();
 }
@@ -263,6 +274,8 @@ const pieceMap = [
 ];
 let tiles = [];
 
+let piececlicked = null;
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
 
@@ -287,7 +300,7 @@ function mouseClicked() {
 
   const piece = tiles[locationX][locationY].piece;
   if (piece) {
-    console.log(piece);
+    piececlicked = tiles[locationX][locationY];
   }
 }
 function draw() {
