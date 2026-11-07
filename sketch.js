@@ -66,10 +66,14 @@ class Beliver extends Piece {
     let captures = [];
     for (let i = 1; i <= range; i++) {
       let row = tile.row + i * this.movedir;
+      if (row >= tiles.length || row < 0) break;
       const ntile = tiles[row][tile.col];
       if (i === 1) {
         for (let i = -1; i <= 1; i += 2) {
-          const ntile = tiles[row][tile.col + i];
+          const ncol = tile.col + i;
+          const nrow = tiles[row];
+          if (ncol >= nrow.length || ncol < 0) continue;
+          const ntile = nrow[ncol];
           if (ntile.piece && ntile.piece.team != piececlicked.piece.team) {
             captures.push(ntile);
           }
@@ -167,6 +171,23 @@ function drawPieces(board) {
     }
   }
   pop();
+}
+function boardSizeChanged(range) {
+  //basic abstraction stuff
+  const boardSize = size();
+  const tilesize = boardSize / range;
+  const offsetX = (width - boardSize) / 2;
+  const offsetY = (height - boardSize) / 2;
+
+  for (let row = 0; row < range; row++) {
+    for (let col = 0; col < range; col++) {
+      let tile = tiles[row][col];
+      tile.x = col * tilesize + offsetX;
+      tile.y = row * tilesize + offsetY;
+      tile.size = tilesize;
+    }
+  }
+  return tiles;
 }
 // to get the size of the board
 const size = () => min(width, height) * 0.9;
@@ -354,8 +375,7 @@ function setup() {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  tiles = createBoard(pieceMap.length);
-  createPieces(tiles, pieceMap);
+  tiles = boardSizeChanged(pieceMap.length);
 }
 
 function mouseClicked() {
@@ -367,6 +387,13 @@ function mouseClicked() {
 
   const locationY = floor((mouseX - offsetX) / tilesize);
   const locationX = floor((mouseY - offsetY) / tilesize);
+  if (
+    locationX >= tiles.length ||
+    locationY >= tiles.length ||
+    locationX < 0 ||
+    locationY < 0
+  )
+    return;
 
   const tile = tiles[locationX][locationY];
 
