@@ -1,16 +1,20 @@
-//basic piece
+//basic piece clss
 class Piece {
-  constructor(sizeRatio = 0.8, canjump) {
+  constructor(sizeRatio = 0.8, canjump, team) {
     this.sizeRatio = sizeRatio;
     this.canjump = canjump;
+    this.hasmoved = false;
+    this.team = team;
+    this.movedir = team == settings.teamOne ? 1 : -1;
   }
-  getmoves() {
-    return null;
+  getmoves(tile) {
+    return tile;
   }
   drawmove(tile) {
+    const { moves, captures } = this.getmoves(tile);
     push();
     fill("grey");
-    for (const move of this.getmoves(tile)) {
+    for (const move of moves) {
       circle(
         move.x + move.size / 2,
         move.y + move.size / 2,
@@ -18,21 +22,34 @@ class Piece {
       );
     }
     pop();
+    push();
+    fill(this.team);
+    for (const capture of captures) {
+      circle(
+        capture.x + capture.size / 2,
+        capture.y + capture.size / 2,
+        (capture.size * this.sizeRatio) / 2,
+      );
+    }
+    pop();
   }
   move(tile, to) {
-    if (this.getmoves(tile).includes(to)) {
+    const { moves, captures } = this.getmoves(tile);
+    if (moves.includes(to) || captures.includes(to)) {
       to.piece = this;
       tile.piece = null;
+      if (!this.hasmoved) {
+        this.hasmoved = true;
+      }
+      return true;
     }
+    return false;
   }
 }
 //pawn like piece in the board game
 class Beliver extends Piece {
   constructor(sizeRatio, team = null) {
-    super(sizeRatio, false);
-    this.team = team;
-    this.movedir = team == settings.teamOne ? 1 : -1;
-    this.hasmoved = false;
+    super(sizeRatio, false, team);
   }
   //placeholder drawing of the beliver
   draw(tile) {
@@ -46,16 +63,25 @@ class Beliver extends Piece {
   getmoves(tile) {
     let range = !this.hasmoved ? 2 : 1;
     let moves = [];
+    let captures = [];
     for (let i = 1; i <= range; i++) {
       let row = tile.row + i * this.movedir;
       const ntile = tiles[row][tile.col];
+      if (i === 1) {
+        for (let i = -1; i <= 1; i += 2) {
+          const ntile = tiles[row][tile.col + i];
+          if (ntile.piece && ntile.piece.team != piececlicked.piece.team) {
+            captures.push(ntile);
+          }
+        }
+      }
       if (ntile.piece)
         if (this.canjump) {
           continue;
         } else break;
       moves.push(ntile);
     }
-    return moves;
+    return { moves, captures };
   }
 }
 // Create the board with it's tiles
@@ -347,11 +373,13 @@ function mouseClicked() {
   if (piececlicked) {
     if (piececlicked === tile) {
       piececlicked = null;
+    } else if (tile.piece && tile.piece.team === piececlicked.piece.team) {
+      piececlicked = tile;
     } else {
-      piececlicked.piece.move(piececlicked, tile);
-      if (tile.piece) {
-        piececlicked = tile;
-      } else piececlicked = null;
+      const moved = piececlicked.piece.move(piececlicked, tile);
+      if (moved) {
+        piececlicked = null;
+      }
     }
   } else if (tile.piece) {
     piececlicked = tile;
