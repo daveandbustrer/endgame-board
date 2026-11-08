@@ -147,7 +147,7 @@ class DemonKing extends Piece {
     fill(this.team);
 
     const offset = (tile.size * (1 - this.sizeRatio)) / 2;
-
+    // temp drawing of the demon king
     rect(
       tile.x + offset,
       tile.y + offset,
@@ -249,6 +249,118 @@ class DemonKing extends Piece {
     return { moves, captures };
   }
 }
+class DiPiece extends Piece {
+  constructor(sizeRatio, canjump, team = null, range = Infinity) {
+    super(sizeRatio, canjump, team);
+    this.range = range;
+  }
+  getmoves(tile) {
+    const moves = [];
+    const captures = [];
+
+    const offsets = [
+      [1, 1],
+      [1, -1],
+      [-1, 1],
+      [-1, -1],
+    ];
+    const range = isFinite(this.range) ? this.range : pieceMap.length;
+    for (const [dr, dc] of offsets) {
+      for (let i = 1; i <= range; i++) {
+        const row = tile.row + dr * i;
+        const col = tile.col + dc * i;
+
+        if (row < 0 || row >= tiles.length) break;
+        if (col < 0 || col >= tiles[row].length) break;
+
+        const ntile = tiles[row][col];
+
+        if (ntile.piece) {
+          captures.push(ntile);
+          if (!this.canjump) break;
+        } else {
+          moves.push(ntile);
+        }
+      }
+    }
+
+    return { moves, captures };
+  }
+}
+class Angel extends DiPiece {
+  constructor(sizeRatio, team) {
+    super(sizeRatio, false, team);
+  }
+  draw(tile) {
+    // temp drawing for angel
+    push();
+    fill(red(this.team), 50, 30);
+    const offset = (tile.size * (1 - this.sizeRatio)) / 2;
+    square(tile.x + offset, tile.y + offset, tile.size * this.sizeRatio);
+    pop();
+  }
+}
+class FallenAngel extends Piece {
+  constructor(sizeRatio, team) {
+    super(sizeRatio, false, team);
+  }
+  draw(tile) {
+    // temp drawing for angel
+    push();
+    fill(red(this.team), 100, 100);
+    const offset = (tile.size * (1 - this.sizeRatio)) / 2;
+    square(tile.x + offset, tile.y + offset, tile.size * this.sizeRatio);
+    pop();
+  }
+  getmoves(tile) {
+    const moves = [];
+    const captures = [];
+
+    const offsets = [
+      [1, 1],
+      [1, 0],
+      [1, -1],
+      [0, 1],
+      [0, -1],
+      [-1, 1],
+      [-1, 0],
+      [-1, -1],
+    ];
+    for (const [dr, dc] of offsets) {
+      for (let i = 1; i <= 4; i++) {
+        const row = tile.row + dr * i;
+        const col = tile.col + dc * i;
+
+        if (row < 0 || row >= tiles.length) break;
+        if (col < 0 || col >= tiles[row].length) break;
+
+        const ntile = tiles[row][col];
+
+        if (ntile.piece) {
+          captures.push(ntile);
+          if (!this.canjump) break;
+        } else {
+          moves.push(ntile);
+        }
+      }
+    }
+
+    return { moves, captures };
+  }
+}
+class GrimReaper extends DiPiece {
+  constructor(sizeRatio, team) {
+    super(sizeRatio, true, team, 2);
+  }
+  draw(tile) {
+    // temp drawing for angel
+    push();
+    fill(red(this.team), 0, 255);
+    const offset = (tile.size * (1 - this.sizeRatio)) / 2;
+    square(tile.x + offset, tile.y + offset, tile.size * this.sizeRatio);
+    pop();
+  }
+}
 // Create the board with it's tiles
 function createBoard(range) {
   //basic abstraction stuff
@@ -275,6 +387,50 @@ function createBoard(range) {
     board.push(rowarray);
   }
   return board;
+}
+class Inquisitor extends Piece {
+  constructor(sizeRatio, team) {
+    super(sizeRatio, false, team);
+  }
+  draw(tile) {
+    // temp drawing for angel
+    push();
+    fill(red(this.team), 255, 255);
+    const offset = (tile.size * (1 - this.sizeRatio)) / 2;
+    square(tile.x + offset, tile.y + offset, tile.size * this.sizeRatio);
+    pop();
+  }
+  getmoves(tile) {
+    const moves = [];
+    const captures = [];
+
+    const offsets = [
+      [1, 0],
+      [0, 1],
+      [0, -1],
+      [-1, 0],
+    ];
+    for (const [dr, dc] of offsets) {
+      for (let i = 1; i <= 6; i++) {
+        const row = tile.row + dr * i;
+        const col = tile.col + dc * i;
+
+        if (row < 0 || row >= tiles.length) break;
+        if (col < 0 || col >= tiles[row].length) break;
+
+        const ntile = tiles[row][col];
+
+        if (ntile.piece) {
+          captures.push(ntile);
+          if (!this.canjump) break;
+        } else {
+          moves.push(ntile);
+        }
+      }
+    }
+
+    return { moves, captures };
+  }
 }
 
 // Add pieces separately.
@@ -360,153 +516,153 @@ const pieceMap = [
     [],
     [],
     [],
-    [Beliver],
-    [Beliver],
-    [DemonKing],
-    [Beliver],
-    [Beliver],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-  ],
-  [
-    [],
-    [],
-    [Knight],
-    [],
-    [Beliver],
-    [],
-    [Beliver],
-    [],
-    [],
-    [],
-    [Beliver],
-    [],
-    [Beliver],
-    [],
-    [Knight],
-    [],
-    [],
-  ],
-  [
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-  ],
-  [
-    [],
-    [],
-    [],
-    [],
-    [Beliver],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [Beliver],
-    [],
-    [],
-    [],
-    [],
-  ],
-  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
-  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
-  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
-  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
-  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
-  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
-  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
-  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
-  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
-  [
-    [],
-    [],
-    [],
-    [],
-    [Beliver],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [Beliver],
-    [],
-    [],
-    [],
-    [],
-  ],
-  [
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-    [Beliver],
-  ],
-  [
-    [],
-    [],
-    [Knight],
-    [],
-    [Beliver],
-    [],
-    [Beliver],
-    [],
-    [],
-    [],
-    [Beliver],
-    [],
-    [Beliver],
-    [],
-    [Knight],
-    [],
-    [],
-  ],
-  [
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [Beliver],
+    [Angel],
     [Beliver],
     [DemonKing],
+    [FallenAngel],
+    [Angel],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+  ],
+  [
+    [],
+    [],
+    [Knight],
+    [],
+    [Inquisitor],
+    [],
+    [GrimReaper],
+    [],
+    [],
+    [],
+    [GrimReaper],
+    [],
+    [Inquisitor],
+    [],
+    [Knight],
+    [],
+    [],
+  ],
+  [
     [Beliver],
     [Beliver],
+    [Beliver],
+    [Beliver],
+    [],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+  ],
+  [
+    [],
+    [],
+    [],
+    [],
+    [Beliver],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [Beliver],
+    [],
+    [],
+    [],
+    [],
+  ],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+  [
+    [],
+    [],
+    [],
+    [],
+    [Beliver],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [Beliver],
+    [],
+    [],
+    [],
+    [],
+  ],
+  [
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+    [Beliver],
+  ],
+  [
+    [],
+    [],
+    [Knight],
+    [],
+    [Inquisitor],
+    [],
+    [GrimReaper],
+    [],
+    [],
+    [],
+    [GrimReaper],
+    [],
+    [Inquisitor],
+    [],
+    [Knight],
+    [],
+    [],
+  ],
+  [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [Angel],
+    [Beliver],
+    [DemonKing],
+    [FallenAngel],
+    [Angel],
     [],
     [],
     [],
