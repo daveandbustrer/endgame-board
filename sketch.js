@@ -95,6 +95,7 @@ class Knight extends Piece {
     super(sizeRatio, true, team);
   }
   draw(tile) {
+    // temp drawing for knight
     push();
     fill(this.team);
     const offset = (tile.size * (1 - this.sizeRatio)) / 2;
@@ -129,6 +130,119 @@ class Knight extends Piece {
         captures.push(ntile);
       } else {
         moves.push(ntile);
+      }
+    }
+
+    return { moves, captures };
+  }
+}
+class DemonKing extends Piece {
+  constructor(sizeRatio, team = null) {
+    super(sizeRatio, false, team);
+  }
+
+  draw(tile) {
+    push();
+    rectMode(CORNER);
+    fill(this.team);
+
+    const offset = (tile.size * (1 - this.sizeRatio)) / 2;
+
+    rect(
+      tile.x + offset,
+      tile.y + offset,
+      tile.size * this.sizeRatio,
+      tile.size * this.sizeRatio,
+    );
+
+    pop();
+  }
+
+  // Squares this king attacks, without checking its own safety.
+  getattacks(tile) {
+    const attacks = [];
+
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+
+        const row = tile.row + dr;
+        const col = tile.col + dc;
+
+        if (row < 0 || row >= tiles.length) continue;
+        if (col < 0 || col >= tiles[row].length) continue;
+
+        attacks.push(tiles[row][col]);
+      }
+    }
+
+    return attacks;
+  }
+
+  isAttacked(target) {
+    for (const row of tiles) {
+      for (const source of row) {
+        const enemy = source.piece;
+
+        if (!enemy || enemy.team === this.team) continue;
+
+        const dr = target.row - source.row;
+        const dc = target.col - source.col;
+
+        if (enemy instanceof Beliver) {
+          if (dr === enemy.movedir && Math.abs(dc) === 1) {
+            return true;
+          }
+        } else if (enemy instanceof Knight) {
+          if (
+            (Math.abs(dr) === 2 && Math.abs(dc) === 1) ||
+            (Math.abs(dr) === 1 && Math.abs(dc) === 2)
+          ) {
+            return true;
+          }
+        } else if (enemy instanceof DemonKing) {
+          if (enemy.getattacks(source).includes(target)) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  getmoves(tile) {
+    const moves = [];
+    const captures = [];
+
+    for (const destination of this.getattacks(tile)) {
+      const occupant = destination.piece;
+
+      // Cannot land on teammates or capture the opposing king.
+      if (occupant && occupant.team === this.team) continue;
+      if (occupant instanceof DemonKing) continue;
+
+      const originalPiece = tile.piece;
+      let unsafe;
+
+      // Temporarily apply the move, including any capture.
+      tile.piece = null;
+      destination.piece = this;
+
+      try {
+        unsafe = this.isAttacked(destination);
+      } finally {
+        // Always restore the original board.
+        tile.piece = originalPiece;
+        destination.piece = occupant;
+      }
+
+      if (unsafe) continue;
+
+      if (occupant) {
+        captures.push(destination);
+      } else {
+        moves.push(destination);
       }
     }
 
@@ -248,7 +362,7 @@ const pieceMap = [
     [],
     [Beliver],
     [Beliver],
-    [Beliver],
+    [DemonKing],
     [Beliver],
     [Beliver],
     [],
@@ -390,7 +504,7 @@ const pieceMap = [
     [],
     [Beliver],
     [Beliver],
-    [Beliver],
+    [DemonKing],
     [Beliver],
     [Beliver],
     [],
