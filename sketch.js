@@ -432,7 +432,126 @@ class Inquisitor extends Piece {
     return { moves, captures };
   }
 }
+class StarDevourer extends Piece {
+  constructor(sizeRatio, team) {
+    super(sizeRatio, false, team);
+    this.range = 4;
+  }
 
+  draw(tile) {
+    push();
+    rectMode(CORNER);
+    fill(red(this.team), 255, 255);
+
+    const offset = (tile.size * (1 - this.sizeRatio)) / 2;
+
+    square(tile.x + offset, tile.y + offset, tile.size * this.sizeRatio);
+
+    pop();
+  }
+
+  getmoves(tile) {
+    const moves = [];
+    const captures = [];
+
+    // Returns true when this path can continue.
+    const checkTile = (row, col) => {
+      if (row < 0 || row >= tiles.length) return false;
+      if (col < 0 || col >= tiles[row].length) return false;
+
+      const destination = tiles[row][col];
+
+      if (destination.piece) {
+        if (destination.piece.team !== this.team) {
+          captures.push(destination);
+        }
+
+        return false;
+      }
+
+      moves.push(destination);
+      return true;
+    };
+
+    // One square directly above or below.
+    checkTile(tile.row - 1, tile.col);
+    checkTile(tile.row + 1, tile.col);
+
+    // Three paths left and three paths right.
+    for (const dr of [-1, 0, 1]) {
+      for (const direction of [-1, 1]) {
+        for (let distance = 1; distance <= this.range; distance++) {
+          const row = tile.row + dr;
+          const col = tile.col + distance * direction;
+
+          if (!checkTile(row, col)) break;
+        }
+      }
+    }
+
+    return { moves, captures };
+  }
+}
+class DragonKing extends Piece {
+  constructor(sizeRatio, team) {
+    super(sizeRatio, false, team);
+    this.range = 4;
+  }
+
+  draw(tile) {
+    push();
+    rectMode(CORNER);
+    fill(red(this.team), 255, 255);
+
+    const offset = (tile.size * (1 - this.sizeRatio)) / 2;
+
+    square(tile.x + offset, tile.y + offset, tile.size * this.sizeRatio);
+
+    pop();
+  }
+
+  getmoves(tile) {
+    const moves = [];
+    const captures = [];
+
+    // Returns true when this path can continue.
+    const checkTile = (row, col) => {
+      if (row < 0 || row >= tiles.length) return false;
+      if (col < 0 || col >= tiles[row].length) return false;
+
+      const destination = tiles[row][col];
+
+      if (destination.piece) {
+        if (destination.piece.team !== this.team) {
+          captures.push(destination);
+        }
+
+        return false;
+      }
+
+      moves.push(destination);
+      return true;
+    };
+
+    // One square directly left or right.
+    checkTile(tile.row, tile.col - 1);
+    checkTile(tile.row, tile.col + 1);
+
+    // Three paths upward and three paths downward.
+    for (const dc of [-1, 0, 1]) {
+      for (const direction of [-1, 1]) {
+        for (let distance = 1; distance <= this.range; distance++) {
+          const row = tile.row + distance * direction;
+          const col = tile.col + dc;
+
+          if (!checkTile(row, col)) break;
+        }
+      }
+    }
+
+    return { moves, captures };
+  }
+}
 // Add pieces separately.
 function createPieces(board, map) {
   for (const row of board) {
@@ -517,7 +636,7 @@ const pieceMap = [
     [],
     [],
     [Angel],
-    [Beliver],
+    [DragonKing],
     [DemonKing],
     [FallenAngel],
     [Angel],
@@ -551,7 +670,7 @@ const pieceMap = [
     [Beliver],
     [Beliver],
     [Beliver],
-    [Beliver],
+    [StarDevourer],
     [],
     [Beliver],
     [Beliver],
@@ -561,7 +680,7 @@ const pieceMap = [
     [Beliver],
     [Beliver],
     [],
-    [Beliver],
+    [StarDevourer],
     [Beliver],
     [Beliver],
     [Beliver],
@@ -617,7 +736,7 @@ const pieceMap = [
     [Beliver],
     [Beliver],
     [Beliver],
-    [Beliver],
+    [StarDevourer],
     [],
     [Beliver],
     [Beliver],
@@ -627,7 +746,7 @@ const pieceMap = [
     [Beliver],
     [Beliver],
     [],
-    [Beliver],
+    [StarDevourer],
     [Beliver],
     [Beliver],
     [Beliver],
@@ -659,7 +778,7 @@ const pieceMap = [
     [],
     [],
     [Angel],
-    [Beliver],
+    [DragonKing],
     [DemonKing],
     [FallenAngel],
     [Angel],
