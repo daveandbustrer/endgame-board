@@ -53,12 +53,14 @@ class Beliver extends Piece {
   }
   //placeholder drawing of the beliver
   draw(tile) {
+    push();
     fill(this.team);
     circle(
       tile.x + tile.size / 2,
       tile.y + tile.size / 2,
       tile.size * this.sizeRatio,
     );
+    pop();
   }
   getmoves(tile) {
     let range = !this.hasmoved ? 2 : 1;
@@ -74,7 +76,7 @@ class Beliver extends Piece {
           const nrow = tiles[row];
           if (ncol >= nrow.length || ncol < 0) continue;
           const ntile = nrow[ncol];
-          if (ntile.piece && ntile.piece.team != piececlicked.piece.team) {
+          if (ntile.piece && ntile.piece.team != this.team) {
             captures.push(ntile);
           }
         }
@@ -85,6 +87,51 @@ class Beliver extends Piece {
         } else break;
       moves.push(ntile);
     }
+    return { moves, captures };
+  }
+}
+class Knight extends Piece {
+  constructor(sizeRatio, team = null) {
+    super(sizeRatio, true, team);
+  }
+  draw(tile) {
+    push();
+    fill(this.team);
+    const offset = (tile.size * (1 - this.sizeRatio)) / 2;
+    square(tile.x + offset, tile.y + offset, tile.size * this.sizeRatio);
+    pop();
+  }
+  getmoves(tile) {
+    const moves = [];
+    const captures = [];
+
+    const offsets = [
+      [2, 1],
+      [2, -1],
+      [-2, 1],
+      [-2, -1],
+      [1, 2],
+      [1, -2],
+      [-1, 2],
+      [-1, -2],
+    ];
+
+    for (const [dr, dc] of offsets) {
+      const row = tile.row + dr;
+      const col = tile.col + dc;
+
+      if (row < 0 || row >= tiles.length) continue;
+      if (col < 0 || col >= tiles[row].length) continue;
+
+      const ntile = tiles[row][col];
+
+      if (ntile.piece) {
+        captures.push(ntile);
+      } else {
+        moves.push(ntile);
+      }
+    }
+
     return { moves, captures };
   }
 }
@@ -187,7 +234,6 @@ function boardSizeChanged(range) {
       tile.size = tilesize;
     }
   }
-  return tiles;
 }
 // to get the size of the board
 const size = () => min(width, height) * 0.9;
@@ -215,7 +261,7 @@ const pieceMap = [
   [
     [],
     [],
-    [Beliver],
+    [Knight],
     [],
     [Beliver],
     [],
@@ -227,7 +273,7 @@ const pieceMap = [
     [],
     [Beliver],
     [],
-    [Beliver],
+    [Knight],
     [],
     [],
   ],
@@ -319,7 +365,7 @@ const pieceMap = [
   [
     [],
     [],
-    [Beliver],
+    [Knight],
     [],
     [Beliver],
     [],
@@ -331,7 +377,7 @@ const pieceMap = [
     [],
     [Beliver],
     [],
-    [Beliver],
+    [Knight],
     [],
     [],
   ],
@@ -364,6 +410,7 @@ const settings = {
 let tiles = [];
 
 let piececlicked;
+let turn = settings.teamOne;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -375,7 +422,7 @@ function setup() {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  tiles = boardSizeChanged(pieceMap.length);
+  boardSizeChanged(pieceMap.length);
 }
 
 function mouseClicked() {
@@ -385,17 +432,11 @@ function mouseClicked() {
   const offsetX = (width - boardSize) / 2;
   const offsetY = (height - boardSize) / 2;
 
-  const locationY = floor((mouseX - offsetX) / tilesize);
-  const locationX = floor((mouseY - offsetY) / tilesize);
-  if (
-    locationX >= tiles.length ||
-    locationY >= tiles.length ||
-    locationX < 0 ||
-    locationY < 0
-  )
-    return;
+  const col = floor((mouseX - offsetX) / tilesize);
+  const row = floor((mouseY - offsetY) / tilesize);
+  if (row >= tiles.length || col >= tiles.length || row < 0 || col < 0) return;
 
-  const tile = tiles[locationX][locationY];
+  const tile = tiles[row][col];
 
   if (piececlicked) {
     if (piececlicked === tile) {
@@ -406,9 +447,11 @@ function mouseClicked() {
       const moved = piececlicked.piece.move(piececlicked, tile);
       if (moved) {
         piececlicked = null;
+        if (turn == settings.teamOne) turn = settings.teamTwo;
+        else turn = settings.teamOne;
       }
     }
-  } else if (tile.piece) {
+  } else if (tile.piece && tile.piece.team === turn) {
     piececlicked = tile;
   }
 }
