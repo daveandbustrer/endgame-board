@@ -624,6 +624,37 @@ function boardSizeChanged(range) {
     }
   }
 }
+function startGame() {
+  // Create a fresh game.
+  tiles = createBoard(pieceMap.length);
+  createPieces(tiles, pieceMap);
+
+  piececlicked = null;
+  turn = settings.teamOne;
+
+  screen = "game";
+  startButton.hide();
+}
+
+function drawMenu() {
+  push();
+
+  fill("gold");
+  noStroke();
+  textAlign(CENTER, CENTER);
+  textSize(48);
+  text("End Boardgame", width / 2, height / 2 - 100);
+
+  fill("white");
+  textSize(20);
+  text("An intense two-player strategy game", width / 2, height / 2 - 45);
+
+  pop();
+}
+
+function positionMenuButton() {
+  startButton.position(width / 2 - 90, height / 2 + 10);
+}
 // to get the size of the board
 const size = () => min(width, height) * 0.9;
 
@@ -800,21 +831,38 @@ let tiles = [];
 
 let piececlicked;
 let turn = settings.teamOne;
+let screen = "menu";
+let startButton;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-
-  tiles = createBoard(pieceMap.length);
-  createPieces(tiles, pieceMap);
   noStroke();
-}
 
+  startButton = createButton("Start Game");
+  startButton.size(180, 50);
+
+  startButton.style("font-size", "22px");
+  startButton.style("background-color", "gold");
+  startButton.style("color", "black");
+  startButton.style("border", "none");
+  startButton.style("border-radius", "8px");
+  startButton.style("cursor", "pointer");
+
+  startButton.mouseClicked(startGame);
+
+  positionMenuButton();
+}
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  boardSizeChanged(pieceMap.length);
-}
 
+  positionMenuButton();
+
+  if (tiles.length > 0) {
+    boardSizeChanged(pieceMap.length);
+  }
+}
 function mouseClicked() {
+  if (screen !== "game") return;
   const boardSize = size();
   const tilesize = boardSize / pieceMap.length;
 
@@ -846,9 +894,16 @@ function mouseClicked() {
 }
 function draw() {
   background("black");
+
+  if (screen === "menu") {
+    drawMenu();
+    return;
+  }
+
   drawBoard(tiles);
   drawPieces(tiles);
-  if (piececlicked) {
-    if (piececlicked.piece) piececlicked.piece.drawmove(piececlicked);
+
+  if (piececlicked && piececlicked.piece) {
+    piececlicked.piece.drawmove(piececlicked);
   }
 }
