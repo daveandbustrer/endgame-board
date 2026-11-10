@@ -10,8 +10,41 @@ class Piece {
   getmoves(tile) {
     return tile;
   }
-  drawmove(tile) {
+  getLegalMoves(tile) {
     const { moves, captures } = this.getmoves(tile);
+
+    const isSafe = (destination) => {
+      const occupant = destination.piece;
+
+      // Never land on teammates or capture a king.
+      if (occupant && occupant.team === this.team) return false;
+      if (occupant instanceof DemonKing) return false;
+
+      const originalPiece = tile.piece;
+      let safe;
+
+      // Temporarily apply this move.
+      tile.piece = null;
+      destination.piece = this;
+
+      try {
+        safe = !isTeamInCheck(this.team);
+      } finally {
+        // Restore the board, including any captured piece.
+        tile.piece = originalPiece;
+        destination.piece = occupant;
+      }
+
+      return safe;
+    };
+
+    return {
+      moves: moves.filter(isSafe),
+      captures: captures.filter(isSafe),
+    };
+  }
+  drawmove(tile) {
+    const { moves, captures } = this.getLegalMoves(tile);
     push();
     fill("grey");
     for (const move of moves) {
@@ -34,16 +67,18 @@ class Piece {
     pop();
   }
   move(tile, to) {
-    const { moves, captures } = this.getmoves(tile);
-    if (moves.includes(to) || captures.includes(to)) {
-      to.piece = this;
-      tile.piece = null;
-      if (!this.hasmoved) {
-        this.hasmoved = true;
-      }
-      return true;
+    // Use legal moves, not just movement-pattern candidates.
+    const { moves, captures } = this.getLegalMoves(tile);
+
+    if (!moves.includes(to) && !captures.includes(to)) {
+      return false;
     }
-    return false;
+
+    to.piece = this;
+    tile.piece = null;
+    this.hasmoved = true;
+
+    return true;
   }
 }
 //pawn like piece in the board game
@@ -189,19 +224,12 @@ class DemonKing extends Piece {
         const dr = target.row - source.row;
         const dc = target.col - source.col;
 
-        if (enemy instanceof Beliver) {
-          if (dr === enemy.movedir && Math.abs(dc) === 1) {
-            return true;
-          }
-        } else if (enemy instanceof Knight) {
-          if (
-            (Math.abs(dr) === 2 && Math.abs(dc) === 1) ||
-            (Math.abs(dr) === 1 && Math.abs(dc) === 2)
-          ) {
-            return true;
-          }
-        } else if (enemy instanceof DemonKing) {
+        if (enemy instanceof DemonKing) {
           if (enemy.getattacks(source).includes(target)) {
+            return true;
+          }
+        } else if (enemy instanceof Piece) {
+          if (enemy.getmoves(source).captures.includes(target)) {
             return true;
           }
         }
@@ -629,10 +657,13 @@ function startGame() {
   tiles = createBoard(pieceMap.length);
   createPieces(tiles, pieceMap);
 
-  piececlicked = null;
-  turn = settings.teamOne;
+  gameOver = false;
+  checkMessage = "";
 
-  screen = "game";
+  piececlicked = null;
+  turn = settings.teamTwo;
+
+  creen_type = "game";
   startButton.hide();
 }
 
@@ -654,6 +685,76 @@ function drawMenu() {
 
 function positionMenuButton() {
   startButton.position(width / 2 - 90, height / 2 + 10);
+}
+function isTeamInCheck(team) {
+  for (const row of tiles) {
+    for (const tile of row) {
+      const piece = tile.piece;
+
+      if (piece instanceof DemonKing && piece.team === team) {
+        return piece.isAttacked(tile);
+      }
+    }
+  }
+
+  // No DemonKing was found for this team.
+  return false;
+}
+function teamHasLegalMove(team) {
+  for (const row of tiles) {
+    for (const tile of row) {
+      const piece = tile.piece;
+
+      if (!piece || piece.team !== team) continue;
+
+      const { moves, captures } = piece.getLegalMoves(tile);
+
+      if (moves.length > 0 || captures.length > 0) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+function updateGameStatus() {
+  const inCheck = isTeamInCheck(turn);
+  const hasMove = teamHasLegalMove(turn);
+
+  if (!hasMove) {
+    gameOver = true;
+
+    if (inCheck) {
+      const winner =
+        turn === settings.teamOne ? settings.teamTwo : settings.teamOne;
+
+      checkMessage = `Checkmate! ${winner} wins!`;
+    } else {
+      checkMessage = "Stalemate! Draw.";
+    }
+    setTimeout(reset, 3000);
+
+    return;
+  }
+
+  checkMessage = inCheck ? `${turn} is in check!` : "";
+}
+function reset() {
+  creen_type = "menu";
+  tiles = [];
+  startButton = createButton("Start Game");
+  startButton.size(180, 50);
+
+  startButton.style("font-size", "22px");
+  startButton.style("background-color", "gold");
+  startButton.style("color", "black");
+  startButton.style("border", "none");
+  startButton.style("border-radius", "8px");
+  startButton.style("cursor", "pointer");
+
+  startButton.mouseClicked(startGame);
+
+  positionMenuButton();
 }
 // to get the size of the board
 const size = () => min(width, height) * 0.9;
@@ -830,9 +931,13 @@ const settings = {
 let tiles = [];
 
 let piececlicked;
-let turn = settings.teamOne;
-let screen = "menu";
+let turn = settings.teamTwo;
+
+let creen_type = "menu";
 let startButton;
+
+let checkMessage = "";
+let gameOver = false;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -862,7 +967,7 @@ function windowResized() {
   }
 }
 function mouseClicked() {
-  if (screen !== "game") return;
+  if (creen_type !== "game" || gameOver) return;
   const boardSize = size();
   const tilesize = boardSize / pieceMap.length;
 
@@ -884,8 +989,10 @@ function mouseClicked() {
       const moved = piececlicked.piece.move(piececlicked, tile);
       if (moved) {
         piececlicked = null;
-        if (turn == settings.teamOne) turn = settings.teamTwo;
-        else turn = settings.teamOne;
+
+        turn = turn === settings.teamOne ? settings.teamTwo : settings.teamOne;
+
+        updateGameStatus();
       }
     }
   } else if (tile.piece && tile.piece.team === turn) {
@@ -895,7 +1002,7 @@ function mouseClicked() {
 function draw() {
   background("black");
 
-  if (screen === "menu") {
+  if (creen_type === "menu") {
     drawMenu();
     return;
   }
@@ -906,4 +1013,22 @@ function draw() {
   if (piececlicked && piececlicked.piece) {
     piececlicked.piece.drawmove(piececlicked);
   }
+
+  // Draw the status after everything else so it stays visible.
+  push();
+  rectMode(CORNER);
+  noStroke();
+
+  // Dark backing makes the text readable over the board.
+  fill(0, 220);
+  rect(0, 0, width, 44);
+
+  fill("white");
+  textAlign(CENTER, CENTER);
+  textSize(22);
+
+  const message = checkMessage || `${turn}'s turn`;
+  text(message, width / 2, 22);
+
+  pop();
 }
