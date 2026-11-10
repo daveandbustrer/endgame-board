@@ -10,3 +10,5 @@ as I don't have many of the rules and much of the special rules like the evoluti
 
 # AI usage
 i used ai to add art so that it can match and some last minute polishing and commenting and also it help nme learn how to do specific things and i asked it to not change me code much so 70-90% of the code is mine 
+
+if you don't like anything i did don't play at all but i think this much is fine and if it crosses your boundary for ai then don't play
